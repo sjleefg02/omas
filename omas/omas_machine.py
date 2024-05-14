@@ -6,7 +6,7 @@ import shutil
 from .omas_utils import *
 from .omas_core import ODS, dynamic_ODS, omas_environment, omas_info_node, imas_json_dir, omas_rcparams
 from .omas_physics import cocos_signals
-from omas.machine_mappings import d3d
+from omas.machine_mappings import d3d, nstx, nstxu, east
 from omas.machine_mappings.d3d import __regression_arguments__
 from omas.utilities.machine_mapping_decorator import machine_mapping_function
 from omas.utilities.omas_mds import mdsvalue
@@ -215,6 +215,9 @@ def resolve_mapped(ods, machine, pulse, mappings, location, idm, options_with_de
 
     # PYTHON
     elif 'PYTHON' in mapped:
+        if 'mast' in machine:
+            printe(f"MAST is currently not supported because of UDA", topic='machine')
+            return ods
         call = mapped['PYTHON'].format(**options_with_defaults)
         # python functions tend to set multiple locations at once
         # it is thus very beneficial to cache that
@@ -736,7 +739,11 @@ class dynamic_omas_machine(dynamic_ODS):
     def keys(self, location):
         ulocation = (o2u(location) + ".").lstrip('.')
         if ulocation + ':' in machine_mappings(self.kw['machine'], self.kw['branch'], self.kw['user_machine_mappings']):
-            return list(range(self[ulocation + ':']))
+            try:
+                return list(range(self[ulocation + ':']))
+            except Exception as _excp:
+                printe(f'{ulocation}: issue:' + repr(_excp))
+                return []
         else:
             tmp = numpy.unique(
                 [
