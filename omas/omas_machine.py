@@ -150,7 +150,7 @@ def machine_to_omas(ods, machine, pulse, location, options={}, branch='', user_m
     else:
         return resolve_mapped(ods, machine, pulse,  mappings, location, idm, options_with_defaults, branch, cache=cache)
 
-def resolve_mapped(ods, machine, pulse,  mappings, location, idm, options_with_defaults, branch, cache=None):
+def resolve_mapped(ods, machine, pulse, mappings, location, idm, options_with_defaults, branch, cache=None):
     """
     Routine to resolve a mapping
 
@@ -170,7 +170,7 @@ def resolve_mapped(ods, machine, pulse,  mappings, location, idm, options_with_d
 
     :param branch: load machine mappings and mapping functions from a specific GitHub branch
 
-    :param cache: if cache is a dictionary, this will be used to establiish a cash
+    :param cache: if cache is a dictionary, this will be used to establish a cash
 
     :return: updated ODS and data before being assigned to the ODS
     """
@@ -245,7 +245,10 @@ def resolve_mapped(ods, machine, pulse,  mappings, location, idm, options_with_d
         try:
             TDI = mapped['TDI'].format(**options_with_defaults)
             treename = mapped['treename'].format(**options_with_defaults) if 'treename' in mapped else None
-            data0 = data = mdsvalue(machine, treename, pulse, TDI).raw()
+            run_id = pulse
+            if treename == "EFIT" and options_with_defaults['EFIT_run_id'] is not None:
+                run_id = pulse*100 + int(options_with_defaults['EFIT_run_id'])
+            data0 = data = mdsvalue(machine, treename, run_id, TDI).raw()
             if data is None:
                 raise ValueError('data is None')
         except Exception as e:
